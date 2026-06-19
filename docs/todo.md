@@ -19,27 +19,46 @@
 
 ## Phase 0 — 환경 세팅 (지금 당장 없으면 아무것도 안 됨)
 
-- [ ] Supabase 프로젝트 생성 + `portfolios` 테이블 생성
+- [x] Supabase 프로젝트 생성 + `portfolios` 테이블 생성 + RLS 설정
   ```sql
+  -- 테이블 생성
   create table portfolios (
     username    text primary key,
     data        jsonb not null,
     updated_at  timestamptz not null default now()
   );
+
+  -- RLS 활성화 (필수 — 없으면 anon key로 전체 데이터 접근 가능)
+  alter table portfolios enable row level security;
+
+  -- 누구나 읽기 허용 (공개 포트폴리오)
+  create policy "public read"
+    on portfolios for select
+    using (true);
+
+  -- 쓰기는 service_role key만 허용 (RLS 우회 → 서버에서만 호출)
   ```
+
+- [x] `lib/supabase.ts`에 서버 전용 클라이언트 추가 (`SUPABASE_SERVICE_ROLE_KEY` 사용)
+  - `/api/portfolio` POST는 서버 클라이언트로 교체해야 함
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`는 공개 읽기 전용으로만 사용
+
 - [ ] GitHub OAuth App 등록 (`github.com/settings/developers` → New OAuth App)
   - Homepage URL: `http://localhost:3000`
   - Callback URL: `http://localhost:3000/api/auth/callback/github`
-- [ ] `.env.local` 파일 작성 (6개 환경변수)
+
+- [ ] `.env.local` 파일 작성 (7개 환경변수)
   ```bash
   NEXTAUTH_URL=http://localhost:3000
-  NEXTAUTH_SECRET=          # openssl rand -base64 32
+  NEXTAUTH_SECRET=                    # openssl rand -base64 32
   GITHUB_ID=
   GITHUB_SECRET=
   ANTHROPIC_API_KEY=
   NEXT_PUBLIC_SUPABASE_URL=
   NEXT_PUBLIC_SUPABASE_ANON_KEY=
+  SUPABASE_SERVICE_ROLE_KEY=          # Supabase → Settings → API → service_role
   ```
+
 - [ ] 로컬 end-to-end 테스트 — 로그인 → AI 생성 → Supabase 저장 → `/{username}` 공개 URL 확인
 
 ---
@@ -71,7 +90,7 @@
 ## Phase 2 — 배포
 
 - [ ] Vercel 프로젝트 연결 (`vercel link` 또는 GitHub 연동)
-- [ ] Vercel에 환경변수 6개 등록
+- [ ] Vercel에 환경변수 7개 등록 (service_role key 포함)
 - [ ] GitHub OAuth App에 프로덕션 Callback URL 추가
   - `https://your-domain.vercel.app/api/auth/callback/github`
 - [ ] `NEXTAUTH_URL`을 프로덕션 URL로 업데이트

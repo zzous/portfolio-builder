@@ -1,6 +1,6 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getSupabase } from '@/lib/supabase';
+import { getSupabase, getSupabaseAdmin } from '@/lib/supabase';
 import { getAuthenticatedUser } from '@/lib/github';
 import type { PortfolioData } from '@/types/portfolio';
 
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
   const portfolio = (await req.json()) as PortfolioData;
   const githubUser = await getAuthenticatedUser(session.accessToken);
 
-  const { error } = await getSupabase().from('portfolios').upsert(
+  const { error } = await getSupabaseAdmin().from('portfolios').upsert(
     {
       username: githubUser.login,
       data: portfolio,
