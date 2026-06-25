@@ -43,11 +43,11 @@
   - `/api/portfolio` POST는 서버 클라이언트로 교체해야 함
   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`는 공개 읽기 전용으로만 사용
 
-- [ ] GitHub OAuth App 등록 (`github.com/settings/developers` → New OAuth App)
+- [x] GitHub OAuth App 등록 (`github.com/settings/developers` → New OAuth App)
   - Homepage URL: `http://localhost:3000`
   - Callback URL: `http://localhost:3000/api/auth/callback/github`
 
-- [ ] `.env.local` 파일 작성 (7개 환경변수)
+- [x] `.env.local` 파일 작성 (7개 환경변수)
   ```bash
   NEXTAUTH_URL=http://localhost:3000
   NEXTAUTH_SECRET=                    # openssl rand -base64 32
@@ -59,35 +59,51 @@
   SUPABASE_SERVICE_ROLE_KEY=          # Supabase → Settings → API → service_role
   ```
 
-- [ ] 로컬 end-to-end 테스트 — 로그인 → AI 생성 → Supabase 저장 → `/{username}` 공개 URL 확인
+- [x] 로컬 end-to-end 테스트 — 로그인 → AI 생성 → Supabase 저장 → `/{username}` 공개 URL 확인
 
 ---
 
 ## Phase 1 — UI/UX 완성
 
-- [ ] 대시보드 진입 시 기존 포트폴리오 불러오기
+- [x] 대시보드 진입 시 기존 포트폴리오 불러오기
   - `GET /api/portfolio?username=xxx` 호출 → 화면에 렌더
   - 새로고침해도 기존 포폴 유지되도록
-- [ ] AI 생성 중 로딩 UI 개선
+- [x] AI 생성 중 로딩 UI 개선
   - 스피너 + `"레포 분석 중... (최대 30초 소요)"` 안내 메시지
   - 버튼 전체 비활성화 (현재는 `disabled` 처리만 있음)
-- [ ] 에러 핸들링 UI 개선
+- [x] 에러 핸들링 UI 개선
   - 에러 종류별 메시지: 인증 만료 / GitHub API 한도 / AI 파싱 실패
   - 현재는 단순 텍스트만 노출
-- [ ] 재생성 버튼 추가
+- [x] 재생성 버튼 추가
   - 이미 포폴 있을 때 "다시 생성" 클릭 시 덮어쓰기 확인 모달
-- [ ] 공개 포트폴리오 페이지 디자인 개선
+- [x] 공개 포트폴리오 페이지 디자인 개선
   - 상단에 아바타 + 이름 + GitHub 링크 추가 (GitHub 유저 정보 저장 필요)
   - 모바일 반응형 점검
-- [ ] 네비게이션 바 추가
+- [x] 네비게이션 바 추가
   - 로고, 로그인 상태에 따라 "내 포트폴리오 보기" 링크 노출
-- [ ] 랜딩페이지 개선
+- [x] 랜딩페이지 개선
   - 데모 포트폴리오 링크 또는 스크린샷 추가
   - "어떻게 작동하나요?" 기능 설명 섹션 추가
 
 ---
 
-## Phase 2 — 배포
+## Phase 2 — UI/UX 개선
+
+- [x] 생성 완료 토스트 메시지
+  - 로딩 끝난 후 "✓ 포트폴리오가 생성됐어요" 피드백 노출
+- [x] 공개 링크 클립보드 복사 버튼
+  - 링크 옆 복사 아이콘 클릭 시 URL 복사 + "복사됨" 피드백
+- [x] 대시보드 기존 포트폴리오 로딩 스켈레톤
+  - 진입 시 데이터 불러오는 동안 빈 화면 대신 스켈레톤 UI
+- [x] 공개 포트폴리오 하단 "나도 만들기" CTA
+  - 다른 사람 포트폴리오 하단에 서비스 유입 버튼 추가
+- [x] OG 메타태그
+  - `/[username]` 페이지에 `title`, `description`, `og:image` (깃헙 아바타 활용)
+  - SNS 공유 시 미리보기 노출
+
+---
+
+## Phase 3 — 배포
 
 - [ ] Vercel 프로젝트 연결 (`vercel link` 또는 GitHub 연동)
 - [ ] Vercel에 환경변수 7개 등록 (service_role key 포함)
@@ -98,7 +114,7 @@
 
 ---
 
-## Phase 3 — 런치 준비
+## Phase 4 — 런치 준비
 
 - [ ] OG 메타태그 추가 — `/[username]` 페이지에 `title`, `description`, `og:image` (깃헙 아바타 활용)
 - [ ] 공유 링크 옆 "링크 복사" 버튼 추가

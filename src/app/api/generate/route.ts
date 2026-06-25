@@ -64,27 +64,36 @@ ${repositories
 export async function POST() {
   const session = await getServerSession(authOptions);
   if (!session?.accessToken) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    return Response.json({ error: 'auth_expired' }, { status: 401 });
   }
 
-  const [githubUser, repos] = await Promise.all([
-    getAuthenticatedUser(session.accessToken),
-    getRepositories(session.accessToken),
-  ]);
-  const repositories = await enrichTopRepositories(repos, session.accessToken);
-
-  const result = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 3000,
-    messages: [{ role: 'user', content: buildPrompt(githubUser, repositories) }],
-  });
-
-  const content = result.content[0].type === 'text' ? result.content[0].text : '';
-
   try {
-    const portfolio = JSON.parse(content);
-    return Response.json(portfolio);
-  } catch {
-    return Response.json({ error: 'Failed to parse AI response' }, { status: 502 });
+    const [githubUser, repos] = await Promise.all([
+      getAuthenticatedUser(session.accessToken),
+      getRepositories(session.accessToken),
+    ]);
+    const repositories = await enrichTopRepositories(repos, session.accessToken);
+
+    const result = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 3000,
+      messages: [{ role: 'user', content: buildPrompt(githubUser, repositories) }],
+    });
+
+    const content = result.content[0].type === 'text' ? result.content[0].text : '';
+
+    try {
+      const json = content.replace(/^```(?:json)?\n?/m, '').replace(/\n?```$/m, '').trim();
+      const portfolio = JSON.parse(json);
+      return Response.json(portfolio);
+    } catch {
+      return Response.json({ error: 'ai_parse_failed' }, { status: 502 });
+    }
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : '';
+    if (msg.includes('rate limit') || msg.includes('403')) {
+      return Response.json({ error: 'github_rate_limit' }, { status: 429 });
+    }
+    throw e;
   }
 }
