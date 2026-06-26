@@ -71,7 +71,7 @@ export default async function PublicPortfolio({
     <main className="min-h-screen py-12">
       <div className="mx-auto max-w-4xl px-6">
         {githubUser && (
-          <div className="mb-10 flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
+          <div className="mb-10 flex flex-col items-center gap-4 text-center">
             <Image
               src={githubUser.avatar_url}
               alt={githubUser.login}
@@ -84,7 +84,7 @@ export default async function PublicPortfolio({
               {githubUser.bio && (
                 <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{githubUser.bio}</p>
               )}
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+              <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1">
                 <a
                   href={githubUser.html_url}
                   target="_blank"

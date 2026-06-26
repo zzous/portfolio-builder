@@ -1,10 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { PortfolioCard } from '@/components/PortfolioCard';
 import { Toast } from '@/components/Toast';
 import type { PortfolioData } from '@/types/portfolio';
+
+interface GithubUserInfo {
+  login: string;
+  name: string | null;
+  avatar_url: string;
+  bio: string | null;
+  html_url: string;
+}
 
 const LOADING_STEPS = [
   '레포지토리 분석 중',
@@ -93,27 +102,28 @@ export default function Dashboard() {
   const [toast, setToast] = useState<string | null>(null);
   const [fetching, setFetching] = useState(false);
   const [generatedCount, setGeneratedCount] = useState<number | null>(null);
+  const [githubUser, setGithubUser] = useState<GithubUserInfo | null>(null);
 
   useEffect(() => {
     if (!session?.login) return;
     setFetching(true);
-    fetch(`/api/portfolio?username=${session.login}`)
-      .then((r) => r.ok ? r.json() : null)
-      .then((res) => {
-        if (res?.data) {
-          setPortfolio(res.data);
-          setShareUrl(`/${session.login}`);
-          // 월이 다르면 0으로 표시
-          const lastReset = res.last_reset_at ? new Date(res.last_reset_at) : null;
-          const now = new Date();
-          const isNewMonth =
-            !lastReset ||
-            lastReset.getFullYear() !== now.getFullYear() ||
-            lastReset.getMonth() !== now.getMonth();
-          setGeneratedCount(isNewMonth ? 0 : (res.generated_count ?? 0));
-        }
-      })
-      .finally(() => setFetching(false));
+    Promise.all([
+      fetch(`/api/portfolio?username=${session.login}`).then((r) => r.ok ? r.json() : null),
+      fetch(`https://api.github.com/users/${session.login}`).then((r) => r.ok ? r.json() : null),
+    ]).then(([res, ghUser]) => {
+      if (res?.data) {
+        setPortfolio(res.data);
+        setShareUrl(`/${session.login}`);
+        const lastReset = res.last_reset_at ? new Date(res.last_reset_at) : null;
+        const now = new Date();
+        const isNewMonth =
+          !lastReset ||
+          lastReset.getFullYear() !== now.getFullYear() ||
+          lastReset.getMonth() !== now.getMonth();
+        setGeneratedCount(isNewMonth ? 0 : (res.generated_count ?? 0));
+      }
+      if (ghUser) setGithubUser(ghUser);
+    }).finally(() => setFetching(false));
   }, [session]);
 
   const ERROR_MESSAGES: Record<string, string> = {
@@ -159,6 +169,34 @@ export default function Dashboard() {
 
   return (
     <main className="mx-auto max-w-4xl py-12 px-6">
+      {githubUser && (
+        <div className="mb-8 flex flex-col items-center gap-3 text-center">
+          <Image
+            src={githubUser.avatar_url}
+            alt={githubUser.login}
+            width={56}
+            height={56}
+            className="rounded-full ring-2 ring-zinc-200 dark:ring-zinc-700"
+          />
+          <div>
+            <p className="font-semibold text-zinc-900 dark:text-zinc-100">
+              {githubUser.name ?? githubUser.login}
+            </p>
+            {githubUser.bio && (
+              <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">{githubUser.bio}</p>
+            )}
+            <a
+              href={githubUser.html_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 inline-block text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+            >
+              @{githubUser.login}
+            </a>
+          </div>
+        </div>
+      )}
+
       <div className="mb-8 border-b border-zinc-100 pb-6 dark:border-zinc-800">
         <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">내 포트폴리오</h1>
         <p className="mt-1 text-sm text-zinc-400">GitHub 레포지토리를 분석해 AI가 포트폴리오를 생성합니다.</p>
