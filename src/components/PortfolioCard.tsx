@@ -17,14 +17,16 @@ export function PortfolioCard({ portfolio }: { portfolio: PortfolioData }) {
         </div>
       </section>
 
-      <section className="grid grid-cols-3 gap-3 rounded-xl bg-zinc-50 p-4 text-center dark:bg-zinc-900">
+      <section className="grid grid-cols-3 gap-3 rounded-lg bg-zinc-50 p-4 text-center dark:bg-zinc-900">
         <div>
           <p className="text-xl font-bold sm:text-2xl">{portfolio.stats.totalProjects}</p>
           <p className="text-xs text-zinc-500">프로젝트</p>
         </div>
         <div>
-          <p className="truncate text-xl font-bold sm:text-2xl">{portfolio.stats.mainLanguage}</p>
-          <p className="text-xs text-zinc-500">주요 언어</p>
+          <p className="truncate text-xl font-bold sm:text-2xl">
+            {portfolio.stats.mainStack?.join(' · ') ?? '—'}
+          </p>
+          <p className="text-xs text-zinc-500">주요 스택</p>
         </div>
         <div>
           <p className="text-xl font-bold sm:text-2xl">{portfolio.stats.experienceLevel}</p>

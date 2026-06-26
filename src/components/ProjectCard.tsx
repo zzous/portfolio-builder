@@ -5,7 +5,7 @@ type Project = PortfolioData['projects'][number];
 
 export function ProjectCard({ project }: { project: Project }) {
   return (
-    <div className="rounded-xl border border-zinc-200 p-5 dark:border-zinc-800">
+    <div className="rounded-lg border border-zinc-200 p-5 dark:border-zinc-800">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">{project.name}</h3>
         <span className="text-xs uppercase text-zinc-500">{project.type}</span>

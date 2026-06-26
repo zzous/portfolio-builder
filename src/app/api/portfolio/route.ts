@@ -13,7 +13,7 @@ export async function GET(req: Request) {
 
   const { data, error } = await getSupabase()
     .from('portfolios')
-    .select('username, data, updated_at')
+    .select('username, data, updated_at, generated_count, last_reset_at')
     .eq('username', username)
     .single();
 

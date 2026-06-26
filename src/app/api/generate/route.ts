@@ -2,7 +2,10 @@ import { getServerSession } from 'next-auth';
 import Anthropic from '@anthropic-ai/sdk';
 import { authOptions } from '@/lib/auth';
 import { getAuthenticatedUser, getRepositories, enrichTopRepositories } from '@/lib/github';
+import { getSupabaseAdmin } from '@/lib/supabase';
 import type { GithubRepo, GithubUser } from '@/types/portfolio';
+
+const FREE_LIMIT = 5;
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -49,7 +52,7 @@ ${repositories
   ],
   "stats": {
     "totalProjects": 0,
-    "mainLanguage": "가장 많이 쓴 언어",
+    "mainStack": ["주요 프레임워크1", "주요 프레임워크2"],
     "experienceLevel": "Junior | Mid | Senior"
   }
 }
@@ -59,12 +62,38 @@ ${repositories
 - README가 없거나 부실해도 커밋 메시지로 유추해서 작성
 - 기술적인 용어보다 임팩트와 가치 중심으로 서술
 - 프로젝트는 스타/최신순으로 상위 5개만 선정
+- mainStack 선정 기준:
+  - 최대 2개, 배열로 반환
+  - 프론트엔드: Vue / React / Angular / Svelte 등 프레임워크 우선. TypeScript · JavaScript는 도구이므로 절대 포함하지 말 것
+  - 백엔드: Spring / Django / Rails / NestJS 등 프레임워크 우선. Java · Python · Ruby는 프레임워크가 없을 때만 포함
+  - 풀스택: 프론트와 백엔드 각 1개씩 선정
 `;
 
 export async function POST() {
   const session = await getServerSession(authOptions);
-  if (!session?.accessToken) {
+  if (!session?.accessToken || !session.login) {
     return Response.json({ error: 'auth_expired' }, { status: 401 });
+  }
+
+  const username = session.login;
+
+  // 월별 생성 횟수 체크
+  const { data: row } = await getSupabaseAdmin()
+    .from('portfolios')
+    .select('generated_count, last_reset_at')
+    .eq('username', username)
+    .single();
+
+  const now = new Date();
+  const lastReset = row?.last_reset_at ? new Date(row.last_reset_at) : null;
+  const isNewMonth =
+    !lastReset ||
+    lastReset.getFullYear() !== now.getFullYear() ||
+    lastReset.getMonth() !== now.getMonth();
+  const currentCount = isNewMonth ? 0 : (row?.generated_count ?? 0);
+
+  if (currentCount >= FREE_LIMIT) {
+    return Response.json({ error: 'generation_limit_exceeded' }, { status: 429 });
   }
 
   try {
@@ -82,13 +111,30 @@ export async function POST() {
 
     const content = result.content[0].type === 'text' ? result.content[0].text : '';
 
+    let portfolio;
     try {
       const json = content.replace(/^```(?:json)?\n?/m, '').replace(/\n?```$/m, '').trim();
-      const portfolio = JSON.parse(json);
-      return Response.json(portfolio);
+      portfolio = JSON.parse(json);
     } catch {
       return Response.json({ error: 'ai_parse_failed' }, { status: 502 });
     }
+
+    // 포트폴리오 저장 + 횟수 업데이트
+    const newCount = currentCount + 1;
+    await getSupabaseAdmin()
+      .from('portfolios')
+      .upsert(
+        {
+          username,
+          data: portfolio,
+          updated_at: now.toISOString(),
+          generated_count: newCount,
+          last_reset_at: isNewMonth ? now.toISOString() : (row?.last_reset_at ?? now.toISOString()),
+        },
+        { onConflict: 'username' }
+      );
+
+    return Response.json({ portfolio, generatedCount: newCount });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : '';
     if (msg.includes('rate limit') || msg.includes('403')) {

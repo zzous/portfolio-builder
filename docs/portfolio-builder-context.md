@@ -68,8 +68,8 @@ AI가 자동 분석
 | AI | Claude API (claude-sonnet-4-6) |
 | 깃헙 데이터 | GitHub REST API / GraphQL API |
 | DB | Supabase (유저 정보, 생성된 포폴 저장) |
-| 배포 | Vercel |
-| 결제 | Paddle (글로벌) or 토스페이먼츠 |
+| 배포 | Netlify (추후 상업화 시 Vercel Pro 이전 고려) |
+| 결제 | 미정 (현재 수익화 단계 아님) |
 
 ---
 
@@ -269,6 +269,7 @@ portfolio-builder/
 │   │   ├── generate/route.ts            # AI 포폴 생성
 │   │   └── portfolio/route.ts           # 포폴 저장/조회
 │   ├── [username]/page.tsx              # 공개 포트폴리오 페이지
+│   ├── admin/page.tsx                   # 관리자 대시보드 (ADMIN_USERNAME만 접근)
 │   ├── dashboard/page.tsx               # 내 포폴 관리
 │   └── page.tsx                         # 랜딩페이지
 ├── lib/
@@ -277,6 +278,9 @@ portfolio-builder/
 ├── types/
 │   └── portfolio.ts                     # 타입 정의
 └── components/
+    ├── Navbar.tsx
+    ├── Footer.tsx
+    ├── Toast.tsx
     ├── PortfolioCard.tsx
     ├── ProjectCard.tsx
     └── SkillBadge.tsx
@@ -289,9 +293,9 @@ portfolio-builder/
 ```bash
 # NextAuth
 NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your-secret
+NEXTAUTH_SECRET=your-secret          # openssl rand -base64 32
 
-# GitHub OAuth (https://github.com/settings/developers)
+# GitHub OAuth — 로컬/프로덕션 각각 별도 OAuth App 사용
 GITHUB_ID=your-github-client-id
 GITHUB_SECRET=your-github-client-secret
 
@@ -301,6 +305,10 @@ ANTHROPIC_API_KEY=your-anthropic-api-key
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+
+# Admin
+ADMIN_USERNAME=zzous
 ```
 
 ---
@@ -314,17 +322,52 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 
 ---
 
-## 수익 목표
+## 수익 전략
 
-| 플랜 | 가격 | 기능 |
+### 현재 단계: 수익화보다 유저 확보 우선
+
+지금 당장 수익화보다 "이 서비스로 취업됐다"는 사례 1~2개가 훨씬 가치 있음.
+그 사례가 생기면 바이럴도 되고 이후 B2B 피칭도 가능해짐.
+
+### 왜 B2C(개발자 개인 과금)는 어려운가
+
+- 취업 후 이탈 → LTV 낮음
+- AI 생성 무제한 허용 시 Anthropic API 비용으로 적자 가능
+- 개발자들은 무료 툴에 익숙, 결제 전환율 낮음
+- 광고는 개발자 대부분이 광고 차단기 사용 + 재방문율 낮아 수익 미미
+
+### 목표 방향: B2B (채용 담당자 과금)
+
+| 대상 | 요금 | 기능 |
 |---|---|---|
-| Free | 무료 | 포폴 1개, 기본 템플릿 |
-| Pro | 월 $9 or 연 $49 | 커스텀 도메인, 여러 버전 저장 |
+| 개발자 Free | 무료 | 포트폴리오 생성 월 5회, 공개 링크 |
+| 개발자 Pro | 월 $X | 무제한 생성, 추후 결정 |
+| 채용 담당자 / 회사 | 월 $29~49 | 포트폴리오 목록 열람 + 필터 + Contact |
+
+#### 왜 B2B인가
+
+- 채용 담당자는 지속적인 니즈 → 이탈률 낮음
+- 개발자는 무료라 유입 쉬움 → DB에 포트폴리오 자연스럽게 쌓임
+- 현재 admin 페이지가 이미 목록 뼈대로 활용 가능
+
+#### Contact 구현 방향 (단계별)
+
+1. GitHub 링크 노출 — 이미 구현됨
+2. GitHub public email 노출 — GitHub API 활용, 간단
+3. 인앱 메시지 — 별도 테이블 필요, 추후
+
+### 로드맵
 
 ```
-유저 500명 × $9 = 월 $4,500 (약 600만원)
-유저 1,000명 × $9 = 월 $9,000 (약 1,200만원)
+지금              →    1~2개월            →    유저 DB 충분히 쌓인 후
+무료 오픈              AI 퀄리티 개선          채용 담당자 대상 B2B 전환
+유저 유입 집중         취업 사례 만들기         유료 플랜 출시
 ```
+
+### B2B 전환 조건
+
+채용 담당자가 돈을 내려면 포트폴리오 DB가 최소 수백~수천 개 쌓여야 함.
+그 전까지는 유저 확보 + 퀄리티 개선에 집중.
 
 ---
 

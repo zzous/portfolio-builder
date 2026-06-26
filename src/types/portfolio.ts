@@ -13,7 +13,7 @@ export interface PortfolioData {
   }[];
   stats: {
     totalProjects: number;
-    mainLanguage: string;
+    mainStack: string[];
     experienceLevel: 'Junior' | 'Mid' | 'Senior';
   };
 }

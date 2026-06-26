@@ -64,7 +64,7 @@ function PortfolioSkeleton() {
           ))}
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-3 rounded-xl bg-zinc-50 p-4 dark:bg-zinc-900">
+      <div className="grid grid-cols-3 gap-3 rounded-lg bg-zinc-50 p-4 dark:bg-zinc-900">
         {[1, 2, 3].map((i) => (
           <div key={i} className="space-y-2 text-center">
             <div className="mx-auto h-6 w-12 rounded bg-zinc-100 dark:bg-zinc-800" />
@@ -73,7 +73,7 @@ function PortfolioSkeleton() {
         ))}
       </div>
       {[1, 2, 3].map((i) => (
-        <div key={i} className="space-y-3 rounded-xl border border-zinc-100 p-5 dark:border-zinc-800">
+        <div key={i} className="space-y-3 rounded-lg border border-zinc-100 p-5 dark:border-zinc-800">
           <div className="h-5 w-1/3 rounded bg-zinc-100 dark:bg-zinc-800" />
           <div className="h-4 w-full rounded bg-zinc-100 dark:bg-zinc-800" />
           <div className="h-4 w-4/5 rounded bg-zinc-100 dark:bg-zinc-800" />
@@ -92,6 +92,7 @@ export default function Dashboard() {
   const [confirmRegen, setConfirmRegen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [fetching, setFetching] = useState(false);
+  const [generatedCount, setGeneratedCount] = useState<number | null>(null);
 
   useEffect(() => {
     if (!session?.login) return;
@@ -102,27 +103,24 @@ export default function Dashboard() {
         if (res?.data) {
           setPortfolio(res.data);
           setShareUrl(`/${session.login}`);
+          // 월이 다르면 0으로 표시
+          const lastReset = res.last_reset_at ? new Date(res.last_reset_at) : null;
+          const now = new Date();
+          const isNewMonth =
+            !lastReset ||
+            lastReset.getFullYear() !== now.getFullYear() ||
+            lastReset.getMonth() !== now.getMonth();
+          setGeneratedCount(isNewMonth ? 0 : (res.generated_count ?? 0));
         }
       })
       .finally(() => setFetching(false));
   }, [session]);
 
-  async function save(data: PortfolioData) {
-    const res = await fetch('/api/portfolio', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (res.ok) {
-      const { username } = await res.json();
-      setShareUrl(`/${username}`);
-    }
-  }
-
   const ERROR_MESSAGES: Record<string, string> = {
     auth_expired: '로그인이 만료됐어요. 로그아웃 후 다시 로그인해주세요.',
     github_rate_limit: 'GitHub API 호출 한도에 걸렸어요. 잠시 후 다시 시도해주세요.',
     ai_parse_failed: 'AI 응답 파싱에 실패했어요. 다시 시도해주세요.',
+    generation_limit_exceeded: '이번 달 생성 횟수(5회)를 모두 사용했어요. 다음 달에 다시 이용해주세요.',
   };
 
   async function handleGenerate() {
@@ -136,8 +134,10 @@ export default function Dashboard() {
         const msg = ERROR_MESSAGES[body?.error] ?? '포트폴리오 생성에 실패했어요. 다시 시도해주세요.';
         throw new Error(msg);
       }
-      setPortfolio(body);
-      await save(body);
+      // generate API가 저장까지 처리하므로 별도 save 불필요
+      setPortfolio(body.portfolio);
+      setGeneratedCount(body.generatedCount);
+      setShareUrl(`/${session?.login}`);
       setToast('✓ 포트폴리오가 생성됐어요');
     } catch (e) {
       setError(e instanceof Error ? e.message : '알 수 없는 오류가 발생했어요');
@@ -158,10 +158,16 @@ export default function Dashboard() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl py-12 px-6">
+    <main className="mx-auto max-w-4xl py-12 px-6">
       <div className="mb-8 border-b border-zinc-100 pb-6 dark:border-zinc-800">
         <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">내 포트폴리오</h1>
         <p className="mt-1 text-sm text-zinc-400">GitHub 레포지토리를 분석해 AI가 포트폴리오를 생성합니다.</p>
+
+        {generatedCount !== null && (
+          <p className="mt-3 text-xs text-zinc-400">
+            이번 달 <span className={generatedCount >= 5 ? 'text-red-500 font-medium' : ''}>{generatedCount}/5회</span> 사용
+          </p>
+        )}
 
         <div className="mt-5 flex flex-wrap items-center gap-2">
           {!portfolio && !loading && (

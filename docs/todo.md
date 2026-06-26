@@ -20,6 +20,7 @@
 ## Phase 0 — 환경 세팅 (지금 당장 없으면 아무것도 안 됨)
 
 - [x] Supabase 프로젝트 생성 + `portfolios` 테이블 생성 + RLS 설정
+
   ```sql
   -- 테이블 생성
   create table portfolios (
@@ -48,6 +49,7 @@
   - Callback URL: `http://localhost:3000/api/auth/callback/github`
 
 - [x] `.env.local` 파일 작성 (7개 환경변수)
+
   ```bash
   NEXTAUTH_URL=http://localhost:3000
   NEXTAUTH_SECRET=                    # openssl rand -base64 32
@@ -103,19 +105,60 @@
 
 ---
 
-## Phase 3 — 배포
+<!-- ## Phase 3 — 배포 (Vercel)
 
 - [ ] Vercel 프로젝트 연결 (`vercel link` 또는 GitHub 연동)
 - [ ] Vercel에 환경변수 7개 등록 (service_role key 포함)
 - [ ] GitHub OAuth App에 프로덕션 Callback URL 추가
   - `https://your-domain.vercel.app/api/auth/callback/github`
 - [ ] `NEXTAUTH_URL`을 프로덕션 URL로 업데이트
-- [ ] 프로덕션 배포 후 end-to-end 재테스트
+- [ ] 프로덕션 배포 후 end-to-end 재테스트 -->
+
+## Phase 3 — 배포 (Netlify)
+
+- [x] Netlify 프로젝트 연결 (GitHub 연동)
+- [x] Netlify에 환경변수 8개 등록
+  - `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `GITHUB_ID`, `GITHUB_SECRET`
+  - `ANTHROPIC_API_KEY`
+  - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+  - `ADMIN_USERNAME`
+- [x] GitHub OAuth App에 프로덕션 Callback URL 추가
+  - `https://your-domain.netlify.app/api/auth/callback/github`
+- [x] `NEXTAUTH_URL`을 프로덕션 URL로 업데이트
+- [x] 프로덕션 배포 후 end-to-end 재테스트
 
 ---
 
 ## Phase 4 — 런치 준비
 
-- [ ] OG 메타태그 추가 — `/[username]` 페이지에 `title`, `description`, `og:image` (깃헙 아바타 활용)
-- [ ] 공유 링크 옆 "링크 복사" 버튼 추가
+- [x] OG 메타태그 추가 — `/[username]` 페이지에 `title`, `description`, `og:image` (깃헙 아바타 활용)
+- [x] 공유 링크 옆 "링크 복사" 버튼 추가
 - [ ] 실제 개발자 5명한테 링크 공유 + 피드백 수집
+
+---
+
+## Phase 5 — 수익화 (유저 확보 후 진행)
+
+### 개발자 생성 횟수 제한 (Free 플랜)
+
+- [x] Supabase `portfolios` 테이블에 `generated_count`, `last_reset_at` 컬럼 추가
+- [x] `/api/generate` 에서 월 5회 초과 시 `429` 에러 반환
+- [x] 대시보드에 남은 생성 횟수 표시 (예: "이번 달 3/5회 사용")
+- [x] 횟수 초과 시 안내 메시지 노출
+
+### 채용 담당자 전용 페이지 (B2B)
+
+- [x] `/recruiters` 페이지 — 서비스 소개 + 유료 플랜 안내
+- [x] admin 페이지 확장 — 스택/경력 수준 필터 추가
+- [x] GitHub public email 노출 기능 — Contact 수단
+- [ ] 채용 담당자 계정 플랜 관리 (Stripe 연동 시)
+
+### 결제 연동 (타이밍 봐서)
+
+> 사업자 없이 시작 가능한 **Lemon Squeezy** (MoR 방식, 세금 처리 위임) 사용 예정
+> Stripe는 한국 계좌 연결 복잡 + 사업자 필요 → 초기에는 부적합
+
+- [ ] Lemon Squeezy 가입 + 상품 2개 등록 (개발자 Pro / 채용 담당자)
+- [ ] Lemon Squeezy Webhook → `/api/webhook/lemonsqueezy` 로 결제 완료 이벤트 수신
+- [ ] 결제 완료 시 Supabase `users` 테이블 `plan` 컬럼 업데이트 (`free` → `pro` / `recruiter`)
+- [ ] 플랜별 기능 분기 처리 (생성 횟수 제한 해제, 채용 담당자 목록 열람 등)

@@ -20,10 +20,10 @@ const STEPS = [
 
 export default function Home() {
   return (
-    <main className="mx-auto max-w-3xl px-6 py-24 text-center">
+    <main className="mx-auto max-w-4xl px-6 py-24 text-center">
       <section className="flex flex-col items-center gap-6">
         <h1 className="text-3xl font-bold leading-[1.3] sm:text-4xl">
-          깃헙 연결 한 번으로
+          GitHub 연결 한 번으로
           <br />
           AI가 만들어주는 포트폴리오
         </h1>
@@ -46,7 +46,7 @@ export default function Home() {
         <h2 className="mb-10 text-lg font-semibold">어떻게 작동하나요?</h2>
         <div className="grid gap-6 text-left sm:grid-cols-3">
           {STEPS.map(({ step, title, desc }) => (
-            <div key={step} className="rounded-xl border border-zinc-100 p-5 dark:border-zinc-800">
+            <div key={step} className="rounded-lg border border-zinc-100 p-5 dark:border-zinc-800">
               <span className="text-xs font-mono text-zinc-400">{step}</span>
               <h3 className="mt-2 font-semibold">{title}</h3>
               <p className="mt-1 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">{desc}</p>
