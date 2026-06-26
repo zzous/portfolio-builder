@@ -272,9 +272,10 @@ export default function Dashboard() {
             </button>
           </div>
         )}
+
+        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
       </div>
 
-      {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
       {loading && <LoadingIndicator />}
       {fetching && !loading && <PortfolioSkeleton />}
       {!loading && !fetching && portfolio && <PortfolioCard portfolio={portfolio} />}
