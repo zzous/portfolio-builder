@@ -13,21 +13,12 @@ export function Navbar() {
           href="/"
           className="text-sm font-semibold tracking-tight hover:opacity-70 transition-opacity duration-200"
         >
-          포트폴리오 빌더
+          Portfolio Builder
         </Link>
-
-        {session?.login && (
-          <Link
-            href={`/${session.login}`}
-            className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors duration-200"
-          >
-            내 포트폴리오 보기
-          </Link>
-        )}
 
         <Link
           href="/recruiters"
-          className="ml-auto text-sm text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors duration-200"
+          className="text-sm text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors duration-200"
         >
           Browse Devs
         </Link>
@@ -35,9 +26,9 @@ export function Navbar() {
         {session && (
           <button
             onClick={() => signOut({ callbackUrl: '/' })}
-            className="text-sm text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors duration-200"
+            className="ml-auto text-sm text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors duration-200"
           >
-            로그아웃
+            Sign out
           </button>
         )}
       </nav>

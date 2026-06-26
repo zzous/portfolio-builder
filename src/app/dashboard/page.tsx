@@ -182,12 +182,12 @@ export default function Dashboard() {
             <>
               {confirmRegen ? (
                 <>
-                  <span className="text-sm text-zinc-500">다시 생성하면 API 비용이 발생해요.</span>
+                  <span className="text-sm text-zinc-500">다시 생성할까요?</span>
                   <button
                     onClick={handleGenerate}
                     className="rounded-full bg-red-500 px-4 py-2 text-sm font-medium text-white hover:opacity-70 transition-all duration-200"
                   >
-                    그래도 생성
+                    생성
                   </button>
                   <button
                     onClick={() => setConfirmRegen(false)}
