@@ -6,6 +6,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import type { GithubRepo, GithubUser } from '@/types/portfolio';
 
 const FREE_LIMIT = 5;
+const ADMIN = process.env.ADMIN_USERNAME ?? 'zzous';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -28,7 +29,7 @@ ${repositories
 - 주요 언어: ${repo.language}
 - 스타: ${repo.stargazers_count}
 - README: ${repo.readme?.slice(0, 500) || '없음'}
-- 최근 커밋: ${repo.commits?.slice(0, 5).join(', ') || '없음'}
+- 최근 커밋: ${repo.commits?.slice(0, 10).join(', ') || '없음'}
 `
   )
   .join('\n')}
@@ -61,7 +62,7 @@ ${repositories
 - 채용담당자가 30초 안에 이 개발자를 이해할 수 있어야 함
 - README가 없거나 부실해도 커밋 메시지로 유추해서 작성
 - 기술적인 용어보다 임팩트와 가치 중심으로 서술
-- 프로젝트는 스타/최신순으로 상위 5개만 선정
+- 프로젝트는 스타/최신순으로 상위 10개만 선정
 - mainStack 선정 기준:
   - 최대 2개, 배열로 반환
   - 프론트엔드: Vue / React / Angular / Svelte 등 프레임워크 우선. TypeScript · JavaScript는 도구이므로 절대 포함하지 말 것
@@ -92,7 +93,7 @@ export async function POST() {
     lastReset.getMonth() !== now.getMonth();
   const currentCount = isNewMonth ? 0 : (row?.generated_count ?? 0);
 
-  if (currentCount >= FREE_LIMIT) {
+  if (currentCount >= FREE_LIMIT && username !== ADMIN) {
     return Response.json({ error: 'generation_limit_exceeded' }, { status: 429 });
   }
 
