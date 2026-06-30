@@ -139,6 +139,14 @@
 
 ## Phase 5 — 수익화 (유저 확보 후 진행)
 
+### 포트폴리오 공개/비공개
+
+- [x] Supabase `portfolios` 테이블에 `is_public` 컬럼 추가 (default true)
+- [x] `/api/portfolio` PATCH — 공개/비공개 토글
+- [x] 대시보드에 공개/비공개 토글 스위치
+- [x] `/browse` 목록에서 비공개 제외
+- [x] `/[username]` 비공개 시 안내 화면 (본인은 정상 노출)
+
 ### 개발자 생성 횟수 제한 (Free 플랜)
 
 - [x] Supabase `portfolios` 테이블에 `generated_count`, `last_reset_at` 컬럼 추가

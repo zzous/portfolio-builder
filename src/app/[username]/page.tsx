@@ -1,6 +1,9 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import type { Metadata } from 'next';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { getSupabase } from '@/lib/supabase';
 import { PortfolioCard } from '@/components/PortfolioCard';
 import { Footer } from '@/components/Footer';
@@ -60,12 +63,40 @@ export default async function PublicPortfolio({
 }: {
   params: { username: string };
 }) {
-  const [{ data }, githubUser] = await Promise.all([
-    getSupabase().from('portfolios').select('data').eq('username', params.username).single(),
+  const [{ data }, githubUser, session] = await Promise.all([
+    getSupabase().from('portfolios').select('data, is_public').eq('username', params.username).single(),
     getGithubUser(params.username),
+    getServerSession(authOptions),
   ]);
 
   if (!data) notFound();
+
+  const isOwner = session?.login === params.username;
+
+  // 비공개인데 본인이 아니면 안내 화면
+  if (!data.is_public && !isOwner) {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center gap-4 px-6 text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+          <svg className="h-6 w-6 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+          </svg>
+        </div>
+        <div>
+          <p className="font-semibold text-zinc-900 dark:text-zinc-100">비공개 포트폴리오입니다</p>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            이 포트폴리오는 작성자가 비공개로 설정했어요.
+          </p>
+        </div>
+        <Link
+          href="/"
+          className="mt-2 rounded-full bg-zinc-900 px-5 py-2 text-sm font-medium text-white transition-opacity hover:opacity-70 dark:bg-white dark:text-zinc-900"
+        >
+          나도 만들기 →
+        </Link>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen py-12">

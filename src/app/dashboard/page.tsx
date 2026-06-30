@@ -103,6 +103,7 @@ export default function Dashboard() {
   const [fetching, setFetching] = useState(false);
   const [generatedCount, setGeneratedCount] = useState<number | null>(null);
   const [githubUser, setGithubUser] = useState<GithubUserInfo | null>(null);
+  const [isPublic, setIsPublic] = useState(true);
 
   useEffect(() => {
     if (!session?.login) return;
@@ -114,6 +115,7 @@ export default function Dashboard() {
       if (res?.data) {
         setPortfolio(res.data);
         setShareUrl(`/${session.login}`);
+        setIsPublic(res.is_public ?? true);
         const lastReset = res.last_reset_at ? new Date(res.last_reset_at) : null;
         const now = new Date();
         const isNewMonth =
@@ -132,6 +134,22 @@ export default function Dashboard() {
     ai_parse_failed: 'AI 응답 파싱에 실패했어요. 다시 시도해주세요.',
     generation_limit_exceeded: '이번 달 생성 횟수(5회)를 모두 사용했어요. 다음 달에 다시 이용해주세요.',
   };
+
+  async function handleToggleVisibility() {
+    const next = !isPublic;
+    setIsPublic(next);
+    const res = await fetch('/api/portfolio', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isPublic: next }),
+    });
+    if (res.ok) {
+      setToast(next ? '✓ 공개로 전환됐어요' : '✓ 비공개로 전환됐어요');
+    } else {
+      setIsPublic(!next); // 실패 시 롤백
+      setToast('전환에 실패했어요. 다시 시도해주세요.');
+    }
+  }
 
   async function handleGenerate() {
     setLoading(true);
@@ -270,6 +288,35 @@ export default function Dashboard() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
             </button>
+          </div>
+        )}
+
+        {portfolio && (
+          <div className="mt-4 flex items-center gap-3">
+            <button
+              onClick={handleToggleVisibility}
+              role="switch"
+              aria-checked={isPublic}
+              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 ${
+                isPublic ? 'bg-zinc-900 dark:bg-white' : 'bg-zinc-200 dark:bg-zinc-700'
+              }`}
+            >
+              <span
+                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-200 dark:bg-zinc-900 ${
+                  isPublic ? 'translate-x-[18px]' : 'translate-x-1'
+                }`}
+              />
+            </button>
+            <div>
+              <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                {isPublic ? '공개' : '비공개'}
+              </p>
+              <p className="text-xs text-zinc-400">
+                {isPublic
+                  ? '채용 담당자 목록과 공개 링크에 노출돼요'
+                  : '나만 볼 수 있어요. 목록·링크에서 숨겨져요'}
+              </p>
+            </div>
           </div>
         )}
 

@@ -23,6 +23,7 @@ export default async function BrowsePage({
   const { data: portfolios } = await getSupabase()
     .from('portfolios')
     .select('username, data, updated_at')
+    .eq('is_public', true)
     .order('updated_at', { ascending: false });
 
   const rows = (portfolios ?? []) as {

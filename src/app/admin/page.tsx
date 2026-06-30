@@ -34,18 +34,21 @@ export default async function AdminPage({
 
   const { data: portfolios } = await getSupabaseAdmin()
     .from('portfolios')
-    .select('username, updated_at, data')
+    .select('username, updated_at, data, is_public')
     .order('updated_at', { ascending: false });
 
   const rows = (portfolios ?? []) as {
     username: string;
     updated_at: string;
     data: PortfolioData;
+    is_public: boolean;
   }[];
 
   // 필터 옵션 추출
   const levels = Array.from(new Set(rows.map((r) => r.data?.stats?.experienceLevel).filter(Boolean))) as string[];
   const languages = Array.from(new Set(rows.flatMap((r) => r.data?.stats?.mainStack ?? []).filter(Boolean))) as string[];
+
+  const publicCount = rows.filter((r) => r.is_public).length;
 
   // 필터 적용
   const filtered = rows.filter((r) => {
@@ -61,10 +64,18 @@ export default async function AdminPage({
         <p className="mt-1 text-sm text-zinc-400">포트폴리오를 생성한 유저 목록</p>
       </div>
 
-      <div className="mb-6 flex flex-wrap items-center gap-4">
+      <div className={`mb-6 grid gap-4 ${searchParams.level || searchParams.lang ? 'grid-cols-4' : 'grid-cols-3'}`}>
         <div className="rounded-lg border border-zinc-100 px-5 py-4 dark:border-zinc-800">
           <p className="text-2xl font-bold">{rows.length}</p>
           <p className="text-xs text-zinc-400">총 유저</p>
+        </div>
+        <div className="rounded-lg border border-zinc-100 px-5 py-4 dark:border-zinc-800">
+          <p className="text-2xl font-bold text-green-600 dark:text-green-400">{publicCount}</p>
+          <p className="text-xs text-zinc-400">공개</p>
+        </div>
+        <div className="rounded-lg border border-zinc-100 px-5 py-4 dark:border-zinc-800">
+          <p className="text-2xl font-bold text-zinc-500">{rows.length - publicCount}</p>
+          <p className="text-xs text-zinc-400">비공개</p>
         </div>
         {searchParams.level || searchParams.lang ? (
           <div className="rounded-lg border border-zinc-100 px-5 py-4 dark:border-zinc-800">
@@ -94,6 +105,7 @@ export default async function AdminPage({
                 <th className="px-4 py-3 text-left font-medium text-zinc-500">유저</th>
                 <th className="px-4 py-3 text-left font-medium text-zinc-500">경력</th>
                 <th className="px-4 py-3 text-left font-medium text-zinc-500">주요 언어</th>
+                <th className="px-4 py-3 text-left font-medium text-zinc-500">공개</th>
                 <th className="px-4 py-3 text-left font-medium text-zinc-500">포트폴리오</th>
                 <th className="px-4 py-3 text-left font-medium text-zinc-500">마지막 생성</th>
               </tr>
@@ -128,6 +140,17 @@ export default async function AdminPage({
                       )}
                     </td>
                     <td className="px-4 py-3 text-zinc-500">{lang ?? <span className="text-zinc-300">—</span>}</td>
+                    <td className="px-4 py-3">
+                      {row.is_public ? (
+                        <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-600 dark:bg-green-900/30 dark:text-green-400">
+                          공개
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                          비공개
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       <a
                         href={`/${row.username}`}

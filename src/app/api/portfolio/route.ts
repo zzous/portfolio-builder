@@ -13,7 +13,7 @@ export async function GET(req: Request) {
 
   const { data, error } = await getSupabase()
     .from('portfolios')
-    .select('username, data, updated_at, generated_count, last_reset_at')
+    .select('username, data, updated_at, generated_count, last_reset_at, is_public')
     .eq('username', username)
     .single();
 
@@ -22,6 +22,27 @@ export async function GET(req: Request) {
   }
 
   return Response.json(data);
+}
+
+export async function PATCH(req: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session?.accessToken) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { isPublic } = (await req.json()) as { isPublic: boolean };
+  const githubUser = await getAuthenticatedUser(session.accessToken);
+
+  const { error } = await getSupabaseAdmin()
+    .from('portfolios')
+    .update({ is_public: isPublic })
+    .eq('username', githubUser.login);
+
+  if (error) {
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+
+  return Response.json({ username: githubUser.login, isPublic });
 }
 
 export async function POST(req: Request) {
